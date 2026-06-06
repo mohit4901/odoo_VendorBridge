@@ -18,12 +18,11 @@ import {
 } from 'lucide-react';
 
 const ActivityLogs = () => {
-  const { auditLogs, clearAllAuditLogs } = useNotifications();
+  const { auditLogs } = useNotifications();
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('All'); // All, RFQ, Vendor, PO, Invoice, System
+  const [activeTab, setActiveTab] = useState('All'); // All, RFQ, Approvals, Invoices, Vendors
   const [selectedUser, setSelectedUser] = useState('All');
   const [sortOrder, setSortOrder] = useState('desc'); // desc = newest, asc = oldest
-  const [isConfirmClearOpen, setIsConfirmClearOpen] = useState(false);
 
   // Available unique users in logs
   const availableUsers = ['All', ...new Set(auditLogs.map(log => log.user))];
@@ -79,20 +78,26 @@ const ActivityLogs = () => {
     link.click();
     document.body.removeChild(link);
   };
-
-  const handleClearAllLogs = () => {
-    clearAllAuditLogs();
-    setIsConfirmClearOpen(false);
-  };
-
   // Filtering logs
   const filteredLogs = auditLogs
     .filter(log => {
       const matchesSearch = 
         log.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         log.desc.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesTab = activeTab === 'All' || log.type.toLowerCase() === activeTab.toLowerCase();
+
+      let matchesTab = false;
+      if (activeTab === 'All') {
+        matchesTab = true;
+      } else if (activeTab === 'RFQ') {
+        matchesTab = log.type.toLowerCase() === 'rfq';
+      } else if (activeTab === 'Approvals') {
+        matchesTab = log.type.toLowerCase() === 'po' || log.type.toLowerCase() === 'approval';
+      } else if (activeTab === 'Invoices') {
+        matchesTab = log.type.toLowerCase() === 'invoice';
+      } else if (activeTab === 'Vendors') {
+        matchesTab = log.type.toLowerCase() === 'vendor';
+      }
+
       const matchesUser = selectedUser === 'All' || log.user === selectedUser;
 
       return matchesSearch && matchesTab && matchesUser;
@@ -105,7 +110,7 @@ const ActivityLogs = () => {
       }
     });
 
-  const categories = ['All', 'RFQ', 'Vendor', 'PO', 'Invoice', 'System'];
+  const categories = ['All', 'RFQ', 'Approvals', 'Invoices', 'Vendors'];
 
   return (
     <div className="space-y-6">
@@ -124,15 +129,6 @@ const ActivityLogs = () => {
             disabled={auditLogs.length === 0}
           >
             Export Logs (.CSV)
-          </Button>
-          <Button 
-            variant="danger" 
-            size="sm" 
-            icon={Trash2} 
-            onClick={() => setIsConfirmClearOpen(true)}
-            disabled={auditLogs.length === 0}
-          >
-            Clear Trail
           </Button>
         </div>
       </div>
@@ -247,35 +243,7 @@ const ActivityLogs = () => {
         )}
       </Card>
 
-      {/* Confirmation Modal to Clear Trail */}
-      {isConfirmClearOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-sm bg-zinc-950 border border-zinc-900 rounded-xl p-6 space-y-5 shadow-2xl">
-            <div className="space-y-2">
-              <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wider">Purge Audit Log Trail?</h3>
-              <p className="text-xs text-zinc-500 leading-relaxed">
-                Are you sure you want to permanently clear the system audit log? This transaction history cannot be restored.
-              </p>
-            </div>
-            <div className="flex justify-end gap-3">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setIsConfirmClearOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                variant="danger" 
-                size="sm" 
-                onClick={handleClearAllLogs}
-              >
-                Clear History
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };

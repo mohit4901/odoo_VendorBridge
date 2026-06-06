@@ -116,11 +116,6 @@ export const NotificationProvider = ({ children }) => {
     saveNotifications([]);
   };
 
-  // Clear all audit logs
-  const clearAllAuditLogs = () => {
-    saveAuditLogs([]);
-  };
-
   return (
     <NotificationContext.Provider value={{
       notifications,
@@ -129,7 +124,6 @@ export const NotificationProvider = ({ children }) => {
       addAuditLog,
       clearNotification,
       clearAllNotifications,
-      clearAllAuditLogs,
       loading
     }}>
       {!loading && children}

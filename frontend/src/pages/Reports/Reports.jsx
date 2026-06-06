@@ -246,223 +246,130 @@ const Reports = () => {
       {/* Header controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-bold text-white tracking-wide">Reports & Analytics</h2>
-          <p className="text-xs text-zinc-500 mt-1">Multi-dimensional dashboard tracking procurement efficiency, corporate spends, and supplier compliance metrics.</p>
+          <h2 className="text-lg font-bold text-white tracking-wide">Reports & analytics</h2>
+          <p className="text-xs text-zinc-500 mt-1">Procurement Insights- may 2025</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <Button 
             variant="outline" 
             size="sm" 
-            icon={Download} 
-            onClick={handleExportCSV}
           >
-            Export CSV
+            May 2025
           </Button>
           <Button 
             variant="primary" 
             size="sm" 
-            icon={Award} 
             onClick={handleExportPDF}
           >
-            Download PDF Summary
+            Export
           </Button>
         </div>
       </div>
 
-      {/* Dynamic Filters Row */}
-      <Card noPadding>
-        <div className="p-4 flex flex-wrap items-center gap-4.5 bg-zinc-950/40">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-zinc-500" />
-            <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Timeframe:</span>
-            <select 
-              value={timeframe}
-              onChange={(e) => setTimeframe(e.target.value)}
-              className="bg-zinc-950 border border-zinc-850 rounded-lg text-xs px-3 py-1.5 text-zinc-300 outline-none focus:border-cyan-500/50"
-            >
-              <option>All Time</option>
-              <option>YTD (2026)</option>
-              <option>Last 90 Days</option>
-              <option>Last 30 Days</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-zinc-500" />
-            <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Category:</span>
-            <select 
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="bg-zinc-950 border border-zinc-850 rounded-lg text-xs px-3 py-1.5 text-zinc-300 outline-none focus:border-cyan-500/50"
-            >
-              <option value="All">All Categories</option>
-              <option value="Raw Materials">Raw Materials</option>
-              <option value="Electronics">Electronics</option>
-              <option value="Office Furniture">Office Furniture</option>
-              <option value="Logistics">Logistics</option>
-              <option value="IT Services">IT Services</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-zinc-500" />
-            <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Vendor:</span>
-            <select 
-              value={selectedVendor}
-              onChange={(e) => setSelectedVendor(e.target.value)}
-              className="bg-zinc-950 border border-zinc-850 rounded-lg text-xs px-3 py-1.5 text-zinc-300 outline-none focus:border-cyan-500/50"
-            >
-              <option value="All">All Vendors</option>
-              {currentVendors.map((v) => (
-                <option key={v.id} value={v.name}>{v.name}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </Card>
-
       {/* KPI Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {/* Total Spend KPI */}
-        <Card className="hover:-translate-y-0.5 transition-transform">
-          <div className="flex justify-between items-start">
-            <div>
-              <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-500">Total Procurement Spend</span>
-              <h3 className="text-2xl font-black text-zinc-100 mt-2">${totalSpend.toLocaleString()}</h3>
-            </div>
-            <div className="p-2 bg-cyan-950/40 border border-cyan-900/40 rounded-lg">
-              <DollarSign className="w-4.5 h-4.5 text-cyan-400" />
-            </div>
-          </div>
-          <div className="flex items-center gap-1 text-[10px] text-emerald-400 font-bold mt-4">
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>+12.4% vs last quarter</span>
-          </div>
+        <Card className="border-cyan-950/20 hover:-translate-y-0.5 transition-transform bg-zinc-950/20">
+          <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-500 block">total spend</span>
+          <h3 className="text-2xl font-black text-cyan-400 mt-1">₹ 12.4 L</h3>
         </Card>
 
-        {/* Avg SLA KPI */}
-        <Card className="hover:-translate-y-0.5 transition-transform">
-          <div className="flex justify-between items-start">
-            <div>
-              <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-500">Average Supplier SLA</span>
-              <h3 className="text-2xl font-black text-zinc-100 mt-2">{avgSla}%</h3>
-            </div>
-            <div className="p-2 bg-emerald-950/40 border border-emerald-900/40 rounded-lg">
-              <ShieldCheck className="w-4.5 h-4.5 text-emerald-400" />
-            </div>
-          </div>
-          <div className="flex items-center gap-1 text-[10px] text-zinc-500 font-bold mt-4">
-            <span>SLA targeting standard &gt;90%</span>
-          </div>
+        {/* Active Vendors KPI */}
+        <Card className="border-emerald-950/20 hover:-translate-y-0.5 transition-transform bg-zinc-950/20">
+          <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-500 block">Active vendors</span>
+          <h3 className="text-2xl font-black text-emerald-400 mt-1">28</h3>
         </Card>
 
-        {/* RFQ Conversion KPI */}
-        <Card className="hover:-translate-y-0.5 transition-transform">
-          <div className="flex justify-between items-start">
-            <div>
-              <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-500">RFQ Conversion Rate</span>
-              <h3 className="text-2xl font-black text-zinc-100 mt-2">{rfqConversionRate}%</h3>
-            </div>
-            <div className="p-2 bg-violet-950/40 border border-violet-900/40 rounded-lg">
-              <FileQuestion className="w-4.5 h-4.5 text-violet-400" />
-            </div>
-          </div>
-          <div className="flex items-center gap-1 text-[10px] text-emerald-400 font-bold mt-4">
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>+2.3% cycle progression</span>
-          </div>
+        {/* PO Fulfillment KPI */}
+        <Card className="border-amber-950/20 hover:-translate-y-0.5 transition-transform bg-zinc-950/20">
+          <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-500 block">PO Fulfillment</span>
+          <h3 className="text-2xl font-black text-amber-500 mt-1">94%</h3>
+        </Card>
+
+        {/* Overdue Invoices KPI */}
+        <Card className="border-red-950/20 hover:-translate-y-0.5 transition-transform bg-zinc-950/20">
+          <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-500 block">overdue invoices</span>
+          <h3 className="text-2xl font-black text-red-500 mt-1">3</h3>
         </Card>
       </div>
 
-      {/* Main Charts Row */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Category Spend Area Chart */}
-        <div className="xl:col-span-2">
-          <Card title="Spend Analytics by Category" subtitle="Monthly department transaction values">
-            <div className="h-80 w-full pt-4">
+      {/* Layout Split Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Side: Spend by Category */}
+        <Card title="Spend by Category" subtitle="Procurement distribution across categories">
+          <div className="space-y-6 py-4">
+            {[
+              { category: 'IT Hardware', amount: '₹4.8L', percentage: 75, colorClass: 'bg-cyan-500' },
+              { category: 'Furniture', amount: '₹3.2L', percentage: 55, colorClass: 'bg-emerald-500' },
+              { category: 'Stationery', amount: '₹2.1L', percentage: 35, colorClass: 'bg-amber-500' },
+              { category: 'Logistics', amount: '₹2.3L', percentage: 40, colorClass: 'bg-blue-500' },
+            ].map((item, idx) => (
+              <div key={idx} className="space-y-2">
+                <div className="flex justify-between text-xs font-semibold text-zinc-350">
+                  <span>{item.category}</span>
+                  <span className="font-bold text-zinc-200">{item.amount}</span>
+                </div>
+                <div className="w-full bg-zinc-900/60 h-2 rounded-full overflow-hidden border border-zinc-800/40">
+                  <div className={`h-full rounded-full ${item.colorClass}`} style={{ width: `${item.percentage}%` }}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Right Side: Top Vendors & Monthly Trend */}
+        <div className="space-y-6">
+          {/* Top Vendors by Spend */}
+          <Card title="Top Vendors by Spend" subtitle="Highest spending supplier accounts">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-zinc-900 bg-zinc-950/30 text-zinc-500 font-bold uppercase tracking-wider">
+                    <th className="px-4 py-2.5">Vendor</th>
+                    <th className="px-4 py-2.5">Spend (₹)</th>
+                    <th className="px-4 py-2.5">POs</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-900/60">
+                  {[
+                    { vendor: 'TechCore Ltd', spend: '4,20,000', pos: 6 },
+                    { vendor: 'Infra Supplies', spend: '3,10,000', pos: 4 },
+                    { vendor: 'FastLog', spend: '1,90,000', pos: 3 }
+                  ].map((item, idx) => (
+                    <tr key={idx} className="hover:bg-zinc-900/10">
+                      <td className="px-4 py-2.5 font-bold text-zinc-300">{item.vendor}</td>
+                      <td className="px-4 py-2.5 text-cyan-400 font-extrabold">₹ {item.spend}</td>
+                      <td className="px-4 py-2.5 text-zinc-400 font-semibold">{item.pos}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          {/* Monthly Trend Bar Chart */}
+          <Card title="Monthly Trend" subtitle="Transactional volumes over time">
+            <div className="h-44 w-full pt-4">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={spendingChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorSpend" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.2}/>
-                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.01}/>
-                    </linearGradient>
-                  </defs>
+                <BarChart data={[
+                  { month: 'Dec', value: 40000 },
+                  { month: 'Jan', value: 55000 },
+                  { month: 'Feb', value: 45000 },
+                  { month: 'Mar', value: 80000 },
+                  { month: 'Apr', value: 70000 },
+                  { month: 'May', value: 95000 },
+                ]} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
                   <CartesianGrid stroke="#18181b" strokeDasharray="3 3" />
-                  <XAxis dataKey="month" stroke="#71717a" fontSize={11} tickLine={false} />
-                  <YAxis stroke="#71717a" fontSize={11} tickLine={false} tickFormatter={(val) => `$${val/1000}k`} />
+                  <XAxis dataKey="month" stroke="#71717a" fontSize={10} tickLine={false} />
+                  <YAxis stroke="#71717a" fontSize={10} tickLine={false} tickFormatter={(val) => `₹${val/1000}k`} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Legend verticalAlign="top" height={36} iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, color: '#e4e4e7' }} />
-                  {selectedCategory !== 'All' ? (
-                    <Area type="monotone" dataKey={selectedCategory} stroke="#06b6d4" strokeWidth={2} fill="url(#colorSpend)" />
-                  ) : (
-                    <>
-                      <Area type="monotone" dataKey="Raw Materials" stroke="#06b6d4" strokeWidth={2} fill="none" />
-                      <Area type="monotone" dataKey="Electronics" stroke="#6366f1" strokeWidth={2} fill="none" />
-                      <Area type="monotone" dataKey="Office Furniture" stroke="#f59e0b" strokeWidth={2} fill="none" />
-                      <Area type="monotone" dataKey="Logistics" stroke="#10b981" strokeWidth={2} fill="none" />
-                      <Area type="monotone" dataKey="IT Services" stroke="#ec4899" strokeWidth={2} fill="none" />
-                    </>
-                  )}
-                </AreaChart>
+                  <Bar dataKey="value" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </Card>
         </div>
-
-        {/* RFQ Status Share Pie Chart */}
-        <div>
-          <Card title="RFQ Funnel Share" subtitle="Status breakdown of negotiation records">
-            <div className="h-80 w-full flex flex-col justify-between pt-4">
-              <div className="h-[210px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={rfqDistributionData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={65}
-                      outerRadius={85}
-                      paddingAngle={3}
-                      dataKey="value"
-                    >
-                      {rfqDistributionData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="grid grid-cols-2 gap-1.5 text-[10px] border-t border-zinc-900/60 pt-4 px-1">
-                {rfqDistributionData.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></span>
-                    <span className="text-zinc-400 font-semibold truncate">{item.name} ({item.value})</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Card>
-        </div>
       </div>
-
-      {/* Vendor SLA Performance Scoreboard */}
-      <Card title="Vendor Scorecard Comparison" subtitle="Supplier SLA rating vs contract compliance scores">
-        <div className="h-80 w-full pt-4">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={vendorPerformanceData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid stroke="#18181b" strokeDasharray="3 3" />
-              <XAxis dataKey="name" stroke="#71717a" fontSize={11} tickLine={false} />
-              <YAxis stroke="#71717a" fontSize={11} tickLine={false} domain={[0, 100]} />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend verticalAlign="top" height={36} iconType="rect" iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="SLA Score" fill="#06b6d4" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Compliance" fill="#6366f1" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </Card>
 
       {/* PDF Export Overlay Simulator Modal */}
       {isExportingPDF && (

@@ -20,6 +20,7 @@ import Modal from '../components/Modal';
 const Approvals = () => {
   const { approvals, approveRequest, rejectRequest } = useApprovals();
   const [selectedApprovalId, setSelectedApprovalId] = useState(null);
+  const [remarks, setRemarks] = useState('');
 
   const selectedApproval = approvals.find(a => a.id === selectedApprovalId);
 
@@ -210,10 +211,10 @@ const Approvals = () => {
               )}
 
               {[
-                { label: 'Buyer Draft', desc: 'Step 1' },
-                { label: 'Manager Review', desc: 'Step 2' },
-                { label: 'Finance Approval', desc: 'Step 3' },
-                { label: 'Issued', desc: 'Step 4' }
+                { label: 'Submitted', desc: 'Step 1' },
+                { label: 'L1 Review', desc: 'Step 2' },
+                { label: 'L2 approval', desc: 'Step 3' },
+                { label: 'Generate PO', desc: 'Step 4' }
               ].map((step, idx) => {
                 const stepNum = idx + 1;
                 const isCurrent = getStepIndex(selectedApproval.status) === stepNum;
@@ -250,62 +251,91 @@ const Approvals = () => {
 
           {/* PANELS SPLIT GRID */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            {/* Left Panel: Audit Timeline (2 Cols) */}
+            {/* Left Panel: Approval Chain & Remarks (2 Cols) */}
             <div className="lg:col-span-2 space-y-4">
-              <Card title="Audit Timeline Log" subtitle="Verifiable review logs on this procurement contract">
+              <Card title="Approval Chain" subtitle="Procurement validation pipeline">
                 <div className="relative border-l border-zinc-900 ml-3.5 pl-6 py-2 space-y-6">
-                  {selectedApproval.history.map((log, index) => (
-                    <div key={index} className="relative">
-                      {/* marker dot */}
-                      <div className="absolute -left-[31px] top-0.5 w-2.5 h-2.5 rounded-full bg-zinc-950 border-2 border-cyan-500 glow-cyan"></div>
-                      <div className="space-y-1">
-                        <div className="flex justify-between items-center text-xs font-bold text-zinc-200">
-                          <span>{log.step}</span>
-                          <span className="text-[10px] text-zinc-600 font-medium">{log.time}</span>
-                        </div>
-                        <div className="text-[10px] text-zinc-500 font-bold uppercase flex items-center gap-1">
-                          <User className="w-3.5 h-3.5 text-zinc-600" />
-                          {log.user}
-                        </div>
-                        {log.comment && (
-                          <p className="text-[11px] text-zinc-400 font-medium italic mt-1.5 leading-normal">
-                            "{log.comment}"
-                          </p>
-                        )}
+                  {/* Mock L1 approval */}
+                  <div className="relative">
+                    <div className="absolute -left-[31px] top-0.5 w-2.5 h-2.5 rounded-full bg-cyan-500 border-2 border-cyan-500 glow-cyan"></div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center text-xs font-bold text-zinc-200">
+                        <span>L1 Review - Procurement Head</span>
+                        <span className="text-[10px] text-cyan-400 font-semibold flex items-center gap-1">
+                          <Check className="w-3 h-3 text-cyan-400" /> Approved
+                        </span>
                       </div>
-                    </div>
-                  ))}
-                  {/* Active rejection status indicator */}
-                  {selectedApproval.status === 'Rejected' && (
-                    <div className="relative text-red-400 border border-red-950 bg-red-950/10 p-3 rounded-lg flex items-start gap-2 text-xs">
-                      <XCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                      <div>
-                        <span className="font-bold">Workflow Terminated</span>
-                        <p className="text-[10px] text-red-500 font-medium mt-0.5">Contract rejected. Re-publish RFQ to gather updated bids.</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </Card>
-            </div>
-
-            {/* Right Panel: PO Summary Details (3 Cols) */}
-            <div className="lg:col-span-3 space-y-4">
-              <Card title="Purchase Order Summary Details" subtitle="Awarded quotation lines and totals">
-                <div className="space-y-6">
-                  {/* Vendor Details card */}
-                  <div className="grid grid-cols-2 gap-4 text-xs border-b border-zinc-900 pb-4">
-                    <div>
-                      <span className="text-[10px] font-bold text-zinc-500 uppercase">Vendor Supplier</span>
-                      <p className="text-zinc-200 font-semibold mt-0.5">{selectedApproval.vendorName}</p>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-zinc-500 uppercase">Approval Reference</span>
-                      <p className="text-zinc-200 font-semibold mt-0.5">VB-WF-{selectedApproval.id}</p>
+                      <div className="text-[10px] text-zinc-500 font-bold uppercase">Rahul Mehta</div>
+                      <div className="text-[10px] text-zinc-600 font-medium">Approved on May 20, 10:32 AM</div>
                     </div>
                   </div>
 
-                  {/* Items Lines Grid */}
+                  {/* L2 approval status depending on current progress */}
+                  <div className="relative">
+                    <div className={`absolute -left-[31px] top-0.5 w-2.5 h-2.5 rounded-full border-2 
+                      ${getStepIndex(selectedApproval.status) >= 3 
+                        ? 'bg-cyan-500 border-cyan-500 glow-cyan' 
+                        : 'bg-zinc-950 border-zinc-750'}`}
+                    ></div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center text-xs font-bold text-zinc-200">
+                        <span>L2 Approval - Finance Manager</span>
+                        <span className={`text-[10px] font-semibold 
+                          ${getStepIndex(selectedApproval.status) >= 3 ? 'text-cyan-400' : 'text-zinc-500'}`}
+                        >
+                          {getStepIndex(selectedApproval.status) >= 3 ? 'Approved' : 'Awaiting'}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-zinc-500 font-bold uppercase">Priya Shah</div>
+                      {selectedApproval.status === 'Finance Approval' && (
+                        <div className="text-[10px] text-cyan-400/80 font-medium animate-pulse">Assigned to you</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Approval Remarks Input Box */}
+              {selectedApproval.status !== 'Issued' && selectedApproval.status !== 'Rejected' && (
+                <Card title="Approval Remarks" subtitle="Comments or conditions for authorization">
+                  <div className="flex flex-col gap-2">
+                    <textarea
+                      value={remarks}
+                      onChange={(e) => setRemarks(e.target.value)}
+                      placeholder="Add your comments or conditions..."
+                      rows="3"
+                      className="w-full bg-zinc-950 border border-zinc-800 text-xs rounded-lg p-3 text-zinc-300 placeholder-zinc-700 outline-none focus:border-cyan-500/50"
+                    ></textarea>
+                  </div>
+                </Card>
+              )}
+            </div>
+
+            {/* Right Panel: Quotations Summary Details (3 Cols) */}
+            <div className="lg:col-span-3 space-y-4">
+              <Card title="Quotations Summary" subtitle="Awarded quotation lines and totals">
+                <div className="space-y-6">
+                  {/* Main Metrics */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs border-b border-zinc-900 pb-4">
+                    <div>
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase">Vendor</span>
+                      <p className="text-zinc-200 font-semibold mt-0.5">{selectedApproval.vendorName}</p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase">Total</span>
+                      <p className="text-cyan-400 font-extrabold mt-0.5">${selectedApproval.amount.toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase">Delivery</span>
+                      <p className="text-zinc-200 font-semibold mt-0.5">10 days</p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase">Rating</span>
+                      <p className="text-emerald-400 font-semibold mt-0.5">4.5/5</p>
+                    </div>
+                  </div>
+
+                  {/* Awarded Items Table List */}
                   <div className="space-y-3">
                     <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">Awarded items</span>
                     <div className="border border-zinc-900 rounded-lg overflow-hidden">
@@ -336,7 +366,7 @@ const Approvals = () => {
                     </div>
                   </div>
 
-                  {/* Approvals Action Buttons block (only shown if in review status) */}
+                  {/* Action Buttons for Approvals */}
                   {selectedApproval.status !== 'Issued' && selectedApproval.status !== 'Rejected' && (
                     <div className="flex gap-3 justify-end pt-4 border-t border-zinc-900">
                       <Button 
@@ -345,7 +375,7 @@ const Approvals = () => {
                         icon={XCircle}
                         onClick={handleReject}
                       >
-                        Reject Quotation
+                        Reject
                       </Button>
                       <Button 
                         variant="primary" 
@@ -353,7 +383,7 @@ const Approvals = () => {
                         icon={CheckCircle2}
                         onClick={handleApprove}
                       >
-                        {selectedApproval.status === 'Manager Review' ? 'Authorize Manager Step' : 'Approve & Issue PO'}
+                        Approve
                       </Button>
                     </div>
                   )}

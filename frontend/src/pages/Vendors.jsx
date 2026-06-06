@@ -170,10 +170,18 @@ const Vendors = () => {
   const filteredVendors = vendors.filter(vendor => {
     const matchesSearch = 
       vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vendor.contactPerson.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vendor.email.toLowerCase().includes(searchTerm.toLowerCase());
+      vendor.category.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = statusFilter === 'All' || vendor.status === statusFilter;
+    let matchesStatus = false;
+    if (statusFilter === 'All') {
+      matchesStatus = true;
+    } else if (statusFilter === 'Active') {
+      matchesStatus = vendor.status === 'Active';
+    } else if (statusFilter === 'Pending') {
+      matchesStatus = vendor.status === 'Pending';
+    } else if (statusFilter === 'Blacklisted') {
+      matchesStatus = vendor.status === 'Blacklisted' || vendor.status === 'Blocked';
+    }
     
     return matchesSearch && matchesStatus;
   });
@@ -181,45 +189,54 @@ const Vendors = () => {
   return (
     <div className="space-y-6">
       {/* Header View */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-bold text-white tracking-wide">Vendors</h2>
-          <p className="text-xs text-zinc-500 mt-1">Manage supplier profiles, category designations, SLA tracking, and registration statuses.</p>
-        </div>
-        <div>
+      <div>
+        <h2 className="text-lg font-bold text-white tracking-wide">Vendors</h2>
+        <p className="text-xs text-zinc-500 mt-1">Manage supplier profiles and registrations</p>
+      </div>
+
+      {/* Search and Filters panel */}
+      <Card noPadding>
+        {/* Card Header with Title and Add Button */}
+        <div className="p-5 flex justify-between items-center border-b border-zinc-900 bg-zinc-950/20">
+          <div>
+            <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Manage supplier profiles</h3>
+          </div>
           <Button 
             variant="primary" 
-            size="md" 
-            icon={UserPlus}
+            size="sm" 
+            icon={Plus}
             onClick={openAddModal}
           >
             Add Vendor
           </Button>
         </div>
-      </div>
 
-      {/* Search and Filters panel */}
-      <Card noPadding>
-        <div className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-900/60 bg-zinc-950/40">
-          {/* Search box */}
-          <div className="relative flex items-center w-full md:max-w-md">
+        {/* Search Bar */}
+        <div className="p-4 border-b border-zinc-900 bg-zinc-950/10">
+          <div className="relative flex items-center w-full">
             <Search className="w-4.5 h-4.5 text-zinc-500 absolute left-3.5 pointer-events-none" />
             <input
               type="text"
-              placeholder="Search vendor directory, contact, email..."
+              placeholder="Search bar...... search by name, gst number, category..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-zinc-950 border border-zinc-800 text-xs rounded-lg pl-11 pr-4 py-2.5 text-zinc-200 placeholder-zinc-500 outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+              className="w-full bg-zinc-950 border border-zinc-800 text-xs rounded-lg pl-11 pr-4 py-2.5 text-zinc-200 placeholder-zinc-550 outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
             />
           </div>
+        </div>
 
-          {/* Filter Chips */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
-            <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider flex items-center gap-1.5 mr-2">
-              <Filter className="w-3.5 h-3.5" />
-              Filter:
-            </span>
-            {['All', 'Active', 'Pending', 'Blacklisted'].map((status) => (
+        {/* Filter Chips with dynamic counts */}
+        <div className="p-4 flex flex-wrap items-center gap-2 border-b border-zinc-900 bg-zinc-950/30">
+          {['All', 'Active', 'Pending', 'Blacklisted'].map((status) => {
+            let count = 0;
+            if (status === 'All') count = vendors.length;
+            else if (status === 'Active') count = vendors.filter(v => v.status === 'Active').length;
+            else if (status === 'Pending') count = vendors.filter(v => v.status === 'Pending').length;
+            else if (status === 'Blacklisted') count = vendors.filter(v => v.status === 'Blacklisted' || v.status === 'Blocked').length;
+            
+            const displayLabel = status === 'Blacklisted' ? 'Blocked' : status;
+            
+            return (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
@@ -229,10 +246,10 @@ const Vendors = () => {
                     : 'bg-zinc-950 border-zinc-900 text-zinc-500 hover:text-zinc-300 hover:border-zinc-800'
                   }`}
               >
-                {status}
+                {displayLabel.toLowerCase()} ({count})
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
 
         {/* Directory Table */}
@@ -243,11 +260,10 @@ const Vendors = () => {
                 <tr className="border-b border-zinc-900 bg-zinc-950/30">
                   <th className="px-5 py-3.5 text-xs font-bold text-zinc-400 uppercase tracking-wider">Vendor Name</th>
                   <th className="px-5 py-3.5 text-xs font-bold text-zinc-400 uppercase tracking-wider">Category</th>
-                  <th className="px-5 py-3.5 text-xs font-bold text-zinc-400 uppercase tracking-wider">Contact Person</th>
-                  <th className="px-5 py-3.5 text-xs font-bold text-zinc-400 uppercase tracking-wider">Email & Phone</th>
-                  <th className="px-5 py-3.5 text-xs font-bold text-zinc-400 uppercase tracking-wider text-center">SLA Score</th>
+                  <th className="px-5 py-3.5 text-xs font-bold text-zinc-400 uppercase tracking-wider">GST no.</th>
+                  <th className="px-5 py-3.5 text-xs font-bold text-zinc-400 uppercase tracking-wider">contact no.</th>
                   <th className="px-5 py-3.5 text-xs font-bold text-zinc-400 uppercase tracking-wider">Status</th>
-                  <th className="px-5 py-3.5 text-xs font-bold text-zinc-400 uppercase tracking-wider text-right">Actions</th>
+                  <th className="px-5 py-3.5 text-xs font-bold text-zinc-400 uppercase tracking-wider text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-900/60">
@@ -260,63 +276,31 @@ const Vendors = () => {
                       <div className="font-semibold text-zinc-150 text-sm group-hover:text-cyan-400 transition-colors">
                         {vendor.name}
                       </div>
-                      <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-0.5">
-                        ID: VB-VND-{vendor.id.toString().slice(-4)}
-                      </div>
                     </td>
                     <td className="px-5 py-4">
                       <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md border ${getCategoryStyles(vendor.category)}`}>
                         {vendor.category}
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-xs font-medium text-zinc-300">
-                      {vendor.contactPerson}
+                    <td className="px-5 py-4 text-xs font-semibold text-zinc-400">
+                      27AABCS1429BzaD
                     </td>
-                    <td className="px-5 py-4">
-                      <div className="flex flex-col gap-1 text-[11px] text-zinc-400 font-medium">
-                        <span className="flex items-center gap-1.5">
-                          <Mail className="w-3.5 h-3.5 text-zinc-600" />
-                          {vendor.email}
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                          <Phone className="w-3.5 h-3.5 text-zinc-600" />
-                          {vendor.phone}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 text-center">
-                      <span className={`text-sm font-bold tracking-tight ${getSlaColor(vendor.slaScore)}`}>
-                        {vendor.slaScore}%
-                      </span>
-                      <div className="w-16 h-1 bg-zinc-900 rounded-full mx-auto mt-1.5 overflow-hidden">
-                        <div 
-                          className={`h-full rounded-full ${vendor.slaScore >= 90 ? 'bg-emerald-500' : vendor.slaScore >= 75 ? 'bg-amber-500' : 'bg-red-500'}`}
-                          style={{ width: `${vendor.slaScore}%` }}
-                        ></div>
-                      </div>
+                    <td className="px-5 py-4 text-xs font-medium text-zinc-400">
+                      {vendor.phone || 'XYZ Number'}
                     </td>
                     <td className="px-5 py-4">
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${getStatusStyles(vendor.status)}`}>
-                        {vendor.status}
+                        {vendor.status === 'Blacklisted' ? 'Blocked' : vendor.status}
                       </span>
                     </td>
                     <td className="px-5 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button 
-                          onClick={() => openEditModal(vendor)}
-                          className="p-2 text-zinc-500 hover:text-cyan-400 hover:bg-cyan-950/20 border border-transparent hover:border-cyan-900/40 rounded-lg transition-all cursor-pointer"
-                          title="Edit Supplier"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button 
-                          onClick={() => openDeleteModal(vendor)}
-                          className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-950/20 border border-transparent hover:border-red-900/40 rounded-lg transition-all cursor-pointer"
-                          title="Delete Supplier"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openEditModal(vendor)}
+                      >
+                        View
+                      </Button>
                     </td>
                   </tr>
                 ))}

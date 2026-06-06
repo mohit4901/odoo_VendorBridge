@@ -105,18 +105,44 @@ const Invoices = () => {
 
       {/* Header */}
       {selectedInvoice ? (
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => setSelectedInvoiceId(null)}
-            className="p-2 bg-zinc-950 border border-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-800 rounded-lg transition-all cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <div>
-            <h2 className="text-lg font-bold text-white tracking-wide">{selectedInvoice.invoiceRef}</h2>
-            <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-0.5">
-              PO Ref: {selectedInvoice.poRef}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setSelectedInvoiceId(null)}
+              className="p-2 bg-zinc-950 border border-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-800 rounded-lg transition-all cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <div>
+              <h2 className="text-lg font-bold text-white tracking-wide">Purchase Order & Invoice</h2>
+              <div className="text-[10px] text-zinc-550 font-bold uppercase tracking-wider mt-0.5 text-zinc-500">
+                {selectedInvoice.poRef}-auto-generated after approval
+              </div>
             </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleDownloadPdf}
+              disabled={pdfDownloading}
+            >
+              {pdfDownloading ? 'Downloading...' : 'Download PDF'}
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setIsPrintOpen(true)}
+            >
+              Print
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleOpenEmail}
+            >
+              Email invoice
+            </Button>
           </div>
         </div>
       ) : (
@@ -220,38 +246,40 @@ const Invoices = () => {
                 {/* Billing Addresses split grid */}
                 <div className="grid grid-cols-2 gap-6 border-b border-zinc-900 pb-5">
                   <div className="space-y-1.5">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Bill To Client</span>
-                    <div className="flex items-center gap-1.5 font-bold text-zinc-200">
-                      <Building className="w-4 h-4 text-cyan-400" />
-                      Client Corporation
-                    </div>
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">Bill to:</span>
+                    <div className="font-bold text-zinc-200">your Organization Name</div>
                     <p className="text-zinc-500 leading-normal">
-                      12, Outer Ring Road, Connaught Place,<br />
-                      New Delhi, DL, 110001
+                      123 business park, ahmedabad<br />
+                      GSTIN: 25B343241FB
                     </p>
                   </div>
                   <div className="space-y-1.5">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Remit From Vendor</span>
-                    <div className="flex items-center gap-1.5 font-bold text-zinc-200">
-                      <User className="w-4 h-4 text-cyan-400" />
-                      {selectedInvoice.vendorName}
-                    </div>
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">Vendor:</span>
+                    <div className="font-bold text-zinc-200">{selectedInvoice.vendorName}</div>
                     <p className="text-zinc-500 leading-normal">
-                      Registered Supplier Node<br />
-                      VendorBridge Catalog System
+                      456, industrial estate, surat<br />
+                      GSTIN: 343434DB4523
                     </p>
                   </div>
                 </div>
 
                 {/* Dates split grid */}
-                <div className="grid grid-cols-2 gap-6 text-xs border-b border-zinc-900 pb-5">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs border-b border-zinc-900 pb-5">
                   <div>
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase">Invoice Date</span>
-                    <p className="text-zinc-200 font-semibold mt-0.5">{selectedInvoice.date}</p>
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase">PO Number</span>
+                    <p className="text-zinc-200 font-semibold mt-0.5">{selectedInvoice.poRef}</p>
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase">Payment Due Date</span>
-                    <p className="text-zinc-200 font-semibold mt-0.5">{selectedInvoice.dueDate}</p>
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase">PO Date</span>
+                    <p className="text-zinc-200 font-semibold mt-0.5">21 May, 2025</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase">Invoice Date</span>
+                    <p className="text-zinc-200 font-semibold mt-0.5">22 May 2025</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase">Due Date</span>
+                    <p className="text-zinc-200 font-semibold mt-0.5">21 June 2025</p>
                   </div>
                 </div>
 
@@ -288,17 +316,37 @@ const Invoices = () => {
                     <span className="text-zinc-500 font-semibold">Subtotal:</span>
                     <span className="text-zinc-200 font-bold">${selectedInvoice.subtotal.toLocaleString()}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500 font-semibold">CGST (9%):</span>
+                    <span className="text-zinc-200 font-bold">${Math.round(selectedInvoice.subtotal * 0.09).toLocaleString()}</span>
+                  </div>
                   <div className="flex justify-between border-b border-zinc-900 pb-2">
-                    <span className="text-zinc-500 font-semibold">GST Sales Tax (18%):</span>
-                    <span className="text-zinc-200 font-bold">${selectedInvoice.tax.toLocaleString()}</span>
+                    <span className="text-zinc-500 font-semibold">SGST (9%):</span>
+                    <span className="text-zinc-200 font-bold">${Math.round(selectedInvoice.subtotal * 0.09).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between font-bold text-sm pt-1">
-                    <span className="text-zinc-300">Invoice Total Due:</span>
+                    <span className="text-zinc-300">Grand total:</span>
                     <span className="text-cyan-400 font-extrabold flex items-center">
                       <DollarSign className="w-4 h-4 shrink-0" />
-                      {selectedInvoice.total.toLocaleString()}
+                      {Math.round(selectedInvoice.subtotal * 1.18).toLocaleString()}
                     </span>
                   </div>
+                </div>
+
+                {/* Inline Status Action */}
+                <div className="flex items-center gap-3 pt-4 border-t border-zinc-900 mt-4">
+                  <span className="text-zinc-500 font-bold uppercase tracking-wider text-[10px]">Status:</span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${getStatusStyles(selectedInvoice.status)}`}>
+                    {selectedInvoice.status}
+                  </span>
+                  {selectedInvoice.status !== 'Paid' && (
+                    <button 
+                      onClick={handleMarkAsPaid}
+                      className="text-xs font-bold text-cyan-400 hover:text-cyan-300 underline cursor-pointer"
+                    >
+                      Mark as Paid
+                    </button>
+                  )}
                 </div>
               </div>
             </Card>
@@ -306,23 +354,9 @@ const Invoices = () => {
 
           {/* Action sidebar details (2 Cols) */}
           <div className="lg:col-span-2 space-y-4">
-            <Card title="Billing Controls" subtitle="Authorize invoice disbursements and dispatch documents">
+            <Card title="Billing Controls" subtitle="Dispatch and verify document records">
               <div className="space-y-4">
-                {selectedInvoice.status !== 'Paid' ? (
-                  <Button 
-                    variant="primary" 
-                    className="w-full flex items-center justify-center gap-1.5"
-                    onClick={handleMarkAsPaid}
-                  >
-                    Authorize Payment (Disburse)
-                  </Button>
-                ) : (
-                  <div className="p-3 bg-emerald-950/15 border border-emerald-900/35 rounded-xl text-center text-emerald-400 text-xs font-semibold flex items-center justify-center gap-2">
-                    <Check className="w-5 h-5 stroke-[3px]" /> Invoice Settled & Paid
-                  </div>
-                )}
-
-                <div className="border-t border-zinc-900 pt-4 space-y-2">
+                <div className="space-y-2">
                   <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">Document Dispatch Actions</span>
                   <Button 
                     variant="outline" 
@@ -347,11 +381,7 @@ const Invoices = () => {
                     onClick={handleDownloadPdf}
                     disabled={pdfDownloading}
                   >
-                    {pdfDownloading ? (
-                      <span className="flex items-center gap-2">
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Downloading...
-                      </span>
-                    ) : 'Download Invoice PDF'}
+                    {pdfDownloading ? 'Downloading...' : 'Download Invoice PDF'}
                   </Button>
                 </div>
               </div>
