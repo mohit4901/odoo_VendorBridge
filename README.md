@@ -1,15 +1,6 @@
 # VendorBridge
 
 ### *Procurement & Vendor Management ERP for Modern Enterprise*
-
-[![Stack: MERN](https://img.shields.io/badge/Stack-MERN-blue.svg?style=for-the-badge)](https://react.dev)
-[![React: v18](https://img.shields.io/badge/React-v18-61DAFB.svg?style=flat-square&logo=react)](https://react.dev)
-[![Node: v20](https://img.shields.io/badge/Node-v20-339933.svg?style=flat-square&logo=node.js)](https://nodejs.org)
-[![Express: v4](https://img.shields.io/badge/Express-v4-000000.svg?style=flat-square&logo=express)](https://expressjs.com)
-[![Database: MongoDB](https://img.shields.io/badge/Database-MongoDB-47A248.svg?style=flat-square&logo=mongodb)](https://www.mongodb.com)
-[![Security: JWT+RBAC](https://img.shields.io/badge/Security-JWT%20%2B%20RBAC-red.svg?style=flat-square)](https://jwt.io)
-[![Cloud: Cloudinary](https://img.shields.io/badge/Cloud-Cloudinary-3448C5.svg?style=flat-square&logo=cloudinary)](https://cloudinary.com)
-
 **VendorBridge** is an enterprise-grade Procurement & Vendor Management ERP designed to digitize, orchestrate, and optimize the complete source-to-pay lifecycle. Built with a scalable micro-module architecture, VendorBridge bridges the operational gap between enterprise purchasing teams and vendor networks, delivering Zoho-simple usability with SAP Ariba-level technical depth.
 
 ---
