@@ -8,7 +8,8 @@ const Button = ({
   onClick,
   disabled = false,
   className = '',
-  icon: Icon = null
+  icon: Icon = null,
+  ...props
 }) => {
   const baseStyles = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-250 active:scale-97 disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100 cursor-pointer';
   
@@ -31,6 +32,7 @@ const Button = ({
       onClick={onClick}
       disabled={disabled}
       className={`${baseStyles} ${sizes[size]} ${variants[variant]} ${className}`}
+      {...props}
     >
       {Icon && <Icon className="w-4 h-4 shrink-0" />}
       {children}
