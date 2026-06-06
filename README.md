@@ -45,7 +45,7 @@ VendorBridge consolidates these fragmented interfaces into a single, compliant, 
 ┌───────────────────────────────────────┐   ┌───────────────────────────────────────┐
 │ Enterprise Portal                     │   │ Dynamic RFQ Engine                    │
 ├───────────────────────────────────────┤   ├───────────────────────────────────────┤
-│ • Secure Self-Registration            │   │ • Line-item specifications builder   │
+│ • Secure Self-Registration            │   │ • Line-item specifications builder    │
 │ • Bank & tax validation uploads       │   │ • Document attachments via Cloudinary │
 │ • Performance rating metrics card     │   │ • Targeted vendor invite lists        │
 └───────────────────────────────────────┘   └───────────────────────────────────────┘
@@ -73,7 +73,7 @@ VendorBridge utilizes a decoupled client-server architecture built on top of the
 
 ```
                   ┌───────────────────────────────┐
-                  │      React Router DOM client   │
+                  │      React Router DOM client  │
                   │   Tailwind CSS Dashboard UI   │
                   └──────────────┬────────────────┘
                                  │ HTTP / JSON API
