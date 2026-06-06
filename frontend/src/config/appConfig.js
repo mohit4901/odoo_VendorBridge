@@ -1,0 +1,1 @@
+// Blueprint: Client settings configurations

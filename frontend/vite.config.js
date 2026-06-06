@@ -1,0 +1,1 @@
+// Blueprint: Vite configuration blueprint
