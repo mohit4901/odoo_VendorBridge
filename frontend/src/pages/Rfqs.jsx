@@ -19,19 +19,28 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import { initialVendors } from '../mock/vendorsData';
+import vendorService from '../services/vendorService';
 
 const Rfqs = () => {
   const { rfqs, publishRfq } = useRFQs();
   const [suppliers, setSuppliers] = useState([]);
   
-  // Load registered vendors for step 3 checkbox list
+  // Load registered vendors from backend API
   useEffect(() => {
-    const saved = localStorage.getItem('vb_vendors');
-    if (saved) {
-      setSuppliers(JSON.parse(saved));
-    } else {
-      setSuppliers(initialVendors);
-    }
+    const fetchSuppliers = async () => {
+      try {
+        const res = await vendorService.list();
+        if (res.success && res.data) {
+          setSuppliers(res.data);
+        } else {
+          setSuppliers(initialVendors);
+        }
+      } catch (err) {
+        console.error('Failed to load suppliers:', err);
+        setSuppliers(initialVendors);
+      }
+    };
+    fetchSuppliers();
   }, []);
 
   // Creation View State ('list' | 'create')
@@ -74,16 +83,17 @@ const Rfqs = () => {
     setItems(items.filter(item => item.id !== itemId));
   };
 
-  // Vendor Selection Handlers
+  // Vendor Selection Handlers — compare as strings to handle both numeric mock IDs and ObjectId strings
   const handleToggleVendor = (vendorId) => {
-    if (selectedVendors.includes(vendorId)) {
-      setSelectedVendors(selectedVendors.filter(id => id !== vendorId));
+    const strId = String(vendorId);
+    if (selectedVendors.some(id => String(id) === strId)) {
+      setSelectedVendors(selectedVendors.filter(id => String(id) !== strId));
     } else {
-      setSelectedVendors([...selectedVendors, vendorId]);
+      setSelectedVendors([...selectedVendors, strId]);
     }
   };
 
-  // Submit Publish
+  // Submit Publish — strip client-side id from items (backend expects only name, qty, uom)
   const handlePublish = () => {
     if (!rfqTitle || !deliveryDate || items.length === 0 || selectedVendors.length === 0) return;
     const rfqPayload = {
@@ -92,7 +102,7 @@ const Rfqs = () => {
       deliveryDate,
       description,
       vendorIds: selectedVendors,
-      items
+      items: items.map(({ id, ...rest }) => rest) // strip temp client id
     };
     publishRfq(rfqPayload);
     setView('list');
@@ -159,41 +169,44 @@ const Rfqs = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-900/60">
-                    {rfqs.map((rfq) => (
-                      <tr key={rfq.id} className="hover:bg-zinc-900/20 transition-colors">
-                        <td className="px-5 py-4">
-                          <div className="font-semibold text-zinc-200 text-sm">{rfq.title}</div>
-                          <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-0.5">
-                            Ref: RFQ-2026-{rfq.id.toString().slice(-4)}
-                          </div>
-                        </td>
-                        <td className="px-5 py-4">
-                          <span className="text-[10px] font-bold px-2.5 py-1 rounded-md border border-zinc-800 bg-zinc-900 text-zinc-300">
-                            {rfq.category}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 text-xs font-medium text-zinc-400">
-                          <div className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5 text-zinc-600" />
-                            {rfq.deliveryDate}
-                          </div>
-                        </td>
-                        <td className="px-5 py-4 text-center text-xs font-semibold text-zinc-300">
-                          {rfq.items?.length || 0}
-                        </td>
-                        <td className="px-5 py-4 text-center">
-                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-400">
-                            <Users className="w-3.5 h-3.5" />
-                            {rfq.vendorIds?.length || 0}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${getStatusStyles(rfq.status)}`}>
-                            {rfq.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                    {rfqs.map((rfq) => {
+                      const rfqId = rfq._id || rfq.id;
+                      return (
+                        <tr key={rfqId} className="hover:bg-zinc-900/20 transition-colors">
+                          <td className="px-5 py-4">
+                            <div className="font-semibold text-zinc-200 text-sm">{rfq.title}</div>
+                            <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-0.5">
+                              Ref: RFQ-2026-{rfqId.toString().slice(-4)}
+                            </div>
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className="text-[10px] font-bold px-2.5 py-1 rounded-md border border-zinc-800 bg-zinc-900 text-zinc-300">
+                              {rfq.category}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4 text-xs font-medium text-zinc-400">
+                            <div className="flex items-center gap-1.5">
+                              <Calendar className="w-3.5 h-3.5 text-zinc-600" />
+                              {rfq.deliveryDate}
+                            </div>
+                          </td>
+                          <td className="px-5 py-4 text-center text-xs font-semibold text-zinc-300">
+                            {rfq.items?.length || 0}
+                          </td>
+                          <td className="px-5 py-4 text-center">
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-400">
+                              <Users className="w-3.5 h-3.5" />
+                              {rfq.vendorIds?.length || 0}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${getStatusStyles(rfq.status)}`}>
+                              {rfq.status}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               ) : (
@@ -412,7 +425,7 @@ const Rfqs = () => {
                     <select
                       onChange={(e) => {
                         if (!e.target.value) return;
-                        const val = parseInt(e.target.value);
+                        const val = e.target.value;
                         if (!selectedVendors.includes(val)) {
                           setSelectedVendors([...selectedVendors, val]);
                         }
@@ -422,10 +435,16 @@ const Rfqs = () => {
                     >
                       <option value="">+ add vendor...</option>
                       {suppliers
-                        .filter(s => s.status !== 'Blacklisted' && !selectedVendors.includes(s.id))
-                        .map(s => (
-                          <option key={s.id} value={s.id}>{s.name} ({s.category})</option>
-                        ))
+                        .filter(s => {
+                          const sId = s._id || s.id;
+                          return s.status !== 'Blacklisted' && !selectedVendors.includes(sId);
+                        })
+                        .map(s => {
+                          const sId = s._id || s.id;
+                          return (
+                            <option key={sId} value={sId}>{s.name} ({s.category})</option>
+                          );
+                        })
                       }
                     </select>
                   </div>
@@ -434,14 +453,15 @@ const Rfqs = () => {
                   <div className="flex flex-wrap gap-2">
                     {selectedVendors.length > 0 ? (
                       selectedVendors.map(vendorId => {
-                        const v = suppliers.find(s => s.id === vendorId);
+                        const v = suppliers.find(s => String(s._id || s.id) === String(vendorId));
                         if (!v) return null;
+                        const vId = v._id || v.id;
                         return (
-                          <span key={v.id} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-200">
+                          <span key={vId} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-200">
                             {v.name}
                             <button
                               type="button"
-                              onClick={() => handleToggleVendor(v.id)}
+                              onClick={() => handleToggleVendor(vId)}
                               className="text-zinc-500 hover:text-red-400 font-bold ml-1.5"
                             >
                               ×
