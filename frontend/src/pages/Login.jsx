@@ -86,18 +86,20 @@ const Login = () => {
         {/* Glow element for mobile */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-cyan-500/5 rounded-full blur-[80px] pointer-events-none lg:hidden"></div>
 
-        <div className="mx-auto w-full max-w-md space-y-8 relative z-10">
-          {/* Header */}
-          <div>
-            <div className="lg:hidden flex justify-center mb-6">
-              <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center glow-cyan">
-                <span className="text-cyan-400 font-bold text-xl">VB</span>
-              </div>
+        <div className="mx-auto w-full max-w-md space-y-6 relative z-10">
+          {/* Circular Photo Placeholder */}
+          <div className="flex flex-col items-center justify-center">
+            <div className="w-24 h-24 rounded-full border border-zinc-800 bg-zinc-950/80 flex items-center justify-center text-xs font-bold text-zinc-500 uppercase tracking-wider shadow-inner">
+              Photo
             </div>
-            <h3 className="text-xl font-bold tracking-tight text-white text-center lg:text-left">
+          </div>
+
+          {/* Header */}
+          <div className="text-center">
+            <h3 className="text-xl font-bold tracking-tight text-white">
               Log in to the console
             </h3>
-            <p className="mt-2 text-xs text-zinc-500 text-center lg:text-left">
+            <p className="mt-2 text-xs text-zinc-500">
               Demo admin credentials pre-loaded for review.
             </p>
           </div>
@@ -113,7 +115,7 @@ const Login = () => {
           {/* Form */}
           <form className="space-y-5" onSubmit={handleSubmit}>
             <Input
-              label="Corporate Email"
+              label="Username"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -123,7 +125,7 @@ const Login = () => {
             />
 
             <Input
-              label="Account Password"
+              label="Password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -152,7 +154,7 @@ const Login = () => {
               className="w-full mt-2"
               disabled={loading}
             >
-              {loading ? 'Validating Session...' : 'Authenticate Console'}
+              {loading ? 'Validating Session...' : 'Login Button'}
             </Button>
           </form>
 

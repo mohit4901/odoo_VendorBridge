@@ -10,11 +10,13 @@ const Register = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
-    password: '',
-    company: '',
-    role: 'vendor' // default role is vendor onboarding
+    phoneNumber: '',
+    role: 'officer',
+    country: '',
+    additionalInfo: ''
   });
 
   const [error, setError] = useState('');
@@ -34,11 +36,12 @@ const Register = () => {
     setLoading(true);
 
     setTimeout(() => {
+      const fullName = `${formData.firstName} ${formData.lastName}`;
       const res = register(
-        formData.name,
+        fullName,
         formData.email,
-        formData.password,
-        formData.company,
+        'password123', // default password for review logins
+        formData.country || 'India',
         formData.role
       );
       setLoading(false);
@@ -109,10 +112,10 @@ const Register = () => {
       </div>
 
       {/* Right Pane - Form */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 py-12 sm:px-16 lg:px-24 xl:px-32 relative">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 py-12 sm:px-16 lg:px-20 xl:px-24 relative">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-cyan-500/5 rounded-full blur-[80px] pointer-events-none lg:hidden"></div>
 
-        <div className="mx-auto w-full max-w-md space-y-8 relative z-10">
+        <div className="mx-auto w-full max-w-lg space-y-6 relative z-10">
           {success ? (
             /* Onboarding Success Screen */
             <div className="text-center space-y-5">
@@ -123,7 +126,7 @@ const Register = () => {
                 Registration Successful!
               </h3>
               <p className="text-xs text-zinc-400 max-w-sm mx-auto leading-relaxed">
-                Your vendor profile has been recorded in database node. You can now authenticate with the email and password you created.
+                Your profile has been recorded in database node. You can authenticate using email <span className="font-bold text-zinc-200">{formData.email}</span> and the default password: <span className="font-bold text-cyan-400">password123</span>.
               </p>
               <div className="pt-4">
                 <Button
@@ -138,16 +141,18 @@ const Register = () => {
           ) : (
             /* Form Screen */
             <>
-              <div>
-                <div className="lg:hidden flex justify-center mb-6">
-                  <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center glow-cyan">
-                    <span className="text-cyan-400 font-bold text-xl">VB</span>
-                  </div>
+              {/* Circular Photo Placeholder */}
+              <div className="flex flex-col items-center justify-center">
+                <div className="w-20 h-20 rounded-full border border-zinc-800 bg-zinc-950 flex items-center justify-center text-xs font-bold text-zinc-500 uppercase tracking-wider shadow-inner">
+                  Photo
                 </div>
-                <h3 className="text-xl font-bold tracking-tight text-white text-center lg:text-left">
+              </div>
+
+              <div className="text-center">
+                <h3 className="text-lg font-bold tracking-tight text-white">
                   Create supplier profile
                 </h3>
-                <p className="mt-2 text-xs text-zinc-500 text-center lg:text-left">
+                <p className="mt-1.5 text-xs text-zinc-500">
                   Register details to connect to the VendorBridge procurement network.
                 </p>
               </div>
@@ -162,73 +167,95 @@ const Register = () => {
 
               {/* Form */}
               <form className="space-y-4" onSubmit={handleSubmit}>
-                <Input
-                  label="Contact Name"
-                  name="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="John Doe"
-                  icon={User}
-                  required
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label="First Name"
+                    name="firstName"
+                    type="text"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    placeholder="John"
+                    required
+                  />
+                  <Input
+                    label="Last Name"
+                    name="lastName"
+                    type="text"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    placeholder="Doe"
+                    required
+                  />
+                </div>
 
-                <Input
-                  label="Corporate Email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="jdoe@company.com"
-                  icon={Mail}
-                  required
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label="Email Address"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="jdoe@company.com"
+                    required
+                  />
+                  <Input
+                    label="Phone Number"
+                    name="phoneNumber"
+                    type="tel"
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    placeholder="+91 98765 43210"
+                    required
+                  />
+                </div>
 
-                <Input
-                  label="Company Name"
-                  name="company"
-                  type="text"
-                  value={formData.company}
-                  onChange={handleChange}
-                  placeholder="Acme Supplies Ltd."
-                  icon={Building}
-                  required
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5 w-full">
+                    <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                      Role (Admin, officer)
+                    </label>
+                    <select
+                      name="role"
+                      value={formData.role}
+                      onChange={handleChange}
+                      className="w-full bg-zinc-950 border border-zinc-800 text-xs text-zinc-300 rounded-lg p-2.5 outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/20 h-[38px]"
+                    >
+                      <option value="officer">Officer</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                  <Input
+                    label="Country"
+                    name="country"
+                    type="text"
+                    value={formData.country}
+                    onChange={handleChange}
+                    placeholder="India"
+                    required
+                  />
+                </div>
 
-                <Input
-                  label="Onboarding Password"
-                  name="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="••••••••"
-                  icon={Lock}
-                  required
-                />
-
-                {/* Role select */}
                 <div className="flex flex-col gap-1.5 w-full">
                   <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                    Console Profile Role
+                    Additional Information
                   </label>
-                  <select
-                    name="role"
-                    value={formData.role}
+                  <textarea
+                    name="additionalInfo"
+                    value={formData.additionalInfo}
                     onChange={handleChange}
-                    className="w-full bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-lg p-2.5 outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/20"
-                  >
-                    <option value="vendor">Vendor (Submit quotations, track POs)</option>
-                    <option value="buyer">Procurement Officer (Publish RFQs, approve POs)</option>
-                  </select>
+                    placeholder="Additional details..."
+                    rows="3"
+                    className="w-full bg-zinc-950 border border-zinc-800 text-xs text-zinc-300 rounded-lg p-2.5 outline-none focus:border-cyan-500/50"
+                  ></textarea>
                 </div>
 
                 <Button
                   type="submit"
                   variant="primary"
-                  className="w-full mt-3"
+                  className="w-full mt-4"
                   disabled={loading}
                 >
-                  {loading ? 'Creating Profile...' : 'Complete Registration'}
+                  {loading ? 'Creating Profile...' : 'Register'}
                 </Button>
               </form>
 
