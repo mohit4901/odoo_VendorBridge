@@ -5,28 +5,6 @@
 
 ---
 
-## Table of Contents
-1. [The Problem We Solve](#the-problem-we-solve)
-2. [Why VendorBridge Matters](#why-vendorbridge-matters)
-3. [Key Features](#key-features)
-4. [System Architecture](#system-architecture)
-5. [Folder Structure](#folder-structure)
-6. [Procurement Workflow](#procurement-workflow)
-7. [User Roles & Access Matrix](#user-roles--access-matrix)
-8. [Core Modules Blueprint](#core-modules-blueprint)
-9. [Database Schema & Relationships](#database-schema--relationships)
-10. [Security Controls](#security-controls)
-11. [Scalability & Reliability Architecture](#scalability--reliability-architecture)
-12. [Future Roadmap](#future-roadmap)
-13. [Installation & Setup](#installation--setup)
-14. [API Gateway Directory](#api-gateway-directory)
-15. [Screenshots & Wireframes](#screenshots--wireframes)
-16. [Business & Strategic Value](#business--strategic-value)
-17. [Hackathon Highlights](#hackathon-highlights)
-18. [Team & Contributors](#team--contributors)
-19. [License](#license)
-
----
 
 ## The Problem We Solve
 
