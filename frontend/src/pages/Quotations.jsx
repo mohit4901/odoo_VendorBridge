@@ -8,7 +8,6 @@ import {
   ChevronRight, 
   Award,
   Users,
-  DollarSign,
   TrendingUp,
   Tag
 } from 'lucide-react';
@@ -17,7 +16,6 @@ import { useApprovals } from '../context/ApprovalContext/ApprovalContext';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Input from '../components/Input';
-import Modal from '../components/Modal';
 import { initialVendors } from '../mock/vendorsData';
 
 const Quotations = () => {
@@ -31,10 +29,11 @@ const Quotations = () => {
   
   // Submit Form States
   const [submitVendorId, setSubmitVendorId] = useState('');
-  const [deliveryTime, setDeliveryTime] = useState('7 days');
   const [validityDate, setValidityDate] = useState('');
-  const [terms, setTerms] = useState('Net 30. Free shipping included.');
+  const [terms, setTerms] = useState('Payment terms: 20 days net...');
   const [itemPrices, setItemPrices] = useState({}); // itemId -> price
+  const [itemDeliveries, setItemDeliveries] = useState({}); // itemId -> delivery days
+  const [gstPercent, setGstPercent] = useState(18);
 
   // Success notifications
   const [alertMsg, setAlertMsg] = useState(null);
@@ -52,14 +51,19 @@ const Quotations = () => {
   const selectedRfq = rfqs.find(r => r.id === selectedRfqId);
   const rfqQuotes = quotes.filter(q => q.rfqId === selectedRfqId);
 
-  // Initialize item prices inputs when RFQ is selected
+  // Initialize item prices and deliveries when RFQ is selected
   useEffect(() => {
     if (selectedRfq) {
       const initialPrices = {};
+      const initialDeliveries = {};
       selectedRfq.items.forEach(item => {
         initialPrices[item.id] = '';
+        initialDeliveries[item.id] = '7'; // default 7 days
       });
       setItemPrices(initialPrices);
+      setItemDeliveries(initialDeliveries);
+      setGstPercent(18);
+      setTerms('Payment terms: 20 days net...');
       // Pre-fill default vendor if not set
       if (selectedRfq.vendorIds?.length > 0) {
         setSubmitVendorId(selectedRfq.vendorIds[0]);
@@ -67,13 +71,23 @@ const Quotations = () => {
     }
   }, [selectedRfqId]);
 
-  // Compute total bid amount based on item prices in form
-  const getFormTotalBid = () => {
+  // Compute subtotal amount
+  const getSubtotal = () => {
     if (!selectedRfq) return 0;
     return selectedRfq.items.reduce((sum, item) => {
       const price = parseFloat(itemPrices[item.id]) || 0;
       return sum + (price * item.qty);
     }, 0);
+  };
+
+  // Compute GST amount
+  const getGstAmount = () => {
+    return Math.round(getSubtotal() * (parseFloat(gstPercent) || 0) / 100);
+  };
+
+  // Compute Grand Total
+  const getGrandTotal = () => {
+    return getSubtotal() + getGstAmount();
   };
 
   const handlePriceChange = (itemId, val) => {
@@ -83,9 +97,16 @@ const Quotations = () => {
     });
   };
 
+  const handleDeliveryChange = (itemId, val) => {
+    setItemDeliveries({
+      ...itemDeliveries,
+      [itemId]: val
+    });
+  };
+
   // Submit Quote Handler
   const handleQuoteSubmit = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!selectedRfq || !submitVendorId) return;
 
     // Check if vendor already submitted a quote for this RFQ
@@ -104,18 +125,19 @@ const Quotations = () => {
       itemPricesFormatted[item.id] = parseFloat(itemPrices[item.id]) || 0;
     });
 
+    const deliveryValues = Object.values(itemDeliveries).map(d => parseInt(d) || 0);
+    const maxDelivery = Math.max(...deliveryValues, 0);
+
     const quotePayload = {
       rfqId: selectedRfq.id,
       vendorId: vendorObj.id,
       vendorName: vendorObj.name,
       slaScore: vendorObj.slaScore,
-      deliveryTime,
+      deliveryTime: `${maxDelivery} days`,
       terms,
       validityDate: validityDate || '2026-07-30',
       items: itemPricesFormatted,
-      totalBid: selectedRfq.items.reduce((sum, item) => {
-        return sum + ((itemPricesFormatted[item.id] || 0) * item.qty);
-      }, 0)
+      totalBid: getGrandTotal()
     };
 
     submitQuote(quotePayload);
@@ -124,10 +146,18 @@ const Quotations = () => {
     
     // reset form inputs
     const initialPrices = {};
+    const initialDeliveries = {};
     selectedRfq.items.forEach(item => {
       initialPrices[item.id] = '';
+      initialDeliveries[item.id] = '7';
     });
     setItemPrices(initialPrices);
+    setItemDeliveries(initialDeliveries);
+  };
+
+  // Save draft handler
+  const handleSaveDraft = () => {
+    setAlertMsg({ type: 'success', text: 'Quotation draft saved successfully!' });
   };
 
   // Find lowest total bid quote
@@ -381,10 +411,10 @@ const Quotations = () => {
                                         ${q.id === lowestQuoteId ? 'bg-cyan-950/10' : ''}`}
                                     >
                                       <div className={isLowest ? 'text-emerald-400 font-bold' : 'text-zinc-300'}>
-                                        ${price.toLocaleString()} / {item.uom.slice(0, 3)}
+                                        ₹{price.toLocaleString()} / {item.uom.slice(0, 3)}
                                       </div>
                                       <div className="text-[10px] text-zinc-500 mt-0.5">
-                                        Line: ${(price * item.qty).toLocaleString()}
+                                        Line: ₹{(price * item.qty).toLocaleString()}
                                       </div>
                                     </td>
                                   );
@@ -415,7 +445,7 @@ const Quotations = () => {
                                     ${isLowest ? 'bg-emerald-950/20 text-emerald-400 shadow-inner' : 'text-zinc-200'}`}
                                 >
                                   <div className="text-base tracking-tight flex items-center justify-center gap-1">
-                                    <DollarSign className="w-4 h-4 shrink-0" />
+                                    <span className="font-bold">₹</span>
                                     {q.totalBid.toLocaleString()}
                                   </div>
                                   {isLowest && (
@@ -465,10 +495,25 @@ const Quotations = () => {
 
           {/* TAB 2: SUBMIT PRICE FORM (SUPPLIER FORM) */}
           {activeTab === 'submit' && (
-            <Card title="Register Supplier Quotation" subtitle="Input pricing sheets as an invited supplier node">
-              <form onSubmit={handleQuoteSubmit} className="space-y-5">
-                
-                {/* Select Supplier Context dropdown */}
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-bold text-white tracking-wide">Submit Quotations</h3>
+                <p className="text-xs text-zinc-500 mt-0.5">
+                  RFQ: {selectedRfq.title} - deadline {selectedRfq.deliveryDate}
+                </p>
+              </div>
+
+              {/* RFQ Summary Box */}
+              <div className="p-4 bg-zinc-950/60 border border-zinc-900 rounded-xl">
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">RFQ Summary</span>
+                <p className="text-xs text-zinc-300 font-medium mt-1 leading-relaxed">
+                  {selectedRfq.description || selectedRfq.items.map(item => `${item.name} * ${item.qty}`).join(', ') + ` - category ${selectedRfq.category}`}
+                </p>
+              </div>
+
+              {/* Form Content */}
+              <form onSubmit={handleQuoteSubmit} className="space-y-6">
+                {/* Select Vendor Dropdown */}
                 <div className="flex flex-col gap-1.5 max-w-md">
                   <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
                     Select Submitting Supplier
@@ -489,92 +534,131 @@ const Quotations = () => {
                   </select>
                 </div>
 
-                <div className="border border-zinc-900 rounded-xl divide-y divide-zinc-900 bg-black/40">
-                  <div className="p-4 bg-zinc-950/60 font-bold text-xs uppercase text-zinc-400 tracking-wider">
-                    Item Pricing Sheet
+                {/* "Your Quotation" Table */}
+                <Card title="Your Quotation" subtitle="Input pricing sheets and delivery days for each line item">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="border-b border-zinc-900 bg-zinc-950/30 text-zinc-400 font-bold uppercase tracking-wider">
+                          <th className="px-4 py-3">Item</th>
+                          <th className="px-4 py-3 text-center">Qty</th>
+                          <th className="px-4 py-3 w-36">Unit price (₹)</th>
+                          <th className="px-4 py-3">Total (₹)</th>
+                          <th className="px-4 py-3 w-36">Delivery (days)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-900/60">
+                        {selectedRfq.items.map((item) => {
+                          const priceVal = parseFloat(itemPrices[item.id]) || 0;
+                          const calculatedTotal = priceVal * item.qty;
+                          return (
+                            <tr key={item.id} className="hover:bg-zinc-900/10">
+                              <td className="px-4 py-3.5 font-semibold text-zinc-200">{item.name}</td>
+                              <td className="px-4 py-3.5 text-center text-zinc-400 font-bold">{item.qty}</td>
+                              <td className="px-4 py-2">
+                                <input
+                                  type="number"
+                                  placeholder="0.00"
+                                  value={itemPrices[item.id] || ''}
+                                  onChange={(e) => handlePriceChange(item.id, e.target.value)}
+                                  className="bg-zinc-950 border border-zinc-800 text-xs rounded-lg p-1.5 text-zinc-300 placeholder-zinc-700 outline-none focus:border-cyan-500/50 w-full"
+                                  min="0.01"
+                                  step="0.01"
+                                  required
+                                />
+                              </td>
+                              <td className="px-4 py-3.5 text-zinc-300 font-bold">
+                                ₹{calculatedTotal.toLocaleString()}
+                              </td>
+                              <td className="px-4 py-2">
+                                <input
+                                  type="number"
+                                  placeholder="7"
+                                  value={itemDeliveries[item.id] || '7'}
+                                  onChange={(e) => handleDeliveryChange(item.id, e.target.value)}
+                                  className="bg-zinc-950 border border-zinc-800 text-xs rounded-lg p-1.5 text-zinc-300 placeholder-zinc-700 outline-none focus:border-cyan-500/50 w-full"
+                                  min="1"
+                                  required
+                                />
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
-                  
-                  {selectedRfq.items.map((item) => (
-                    <div 
-                      key={item.id} 
-                      className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                    >
-                      <div>
-                        <div className="text-xs font-bold text-zinc-200">{item.name}</div>
-                        <div className="text-[10px] text-zinc-500 font-semibold mt-0.5">Required: {item.qty} {item.uom}</div>
-                      </div>
-                      
-                      <div className="w-full sm:w-48 flex items-center gap-2">
-                        <span className="text-xs font-bold text-zinc-500">$</span>
-                        <input
-                          type="number"
-                          placeholder="Unit Price"
-                          value={itemPrices[item.id] || ''}
-                          onChange={(e) => handlePriceChange(item.id, e.target.value)}
-                          className="bg-zinc-950 border border-zinc-800 text-xs rounded-lg p-2 text-zinc-300 placeholder-zinc-700 outline-none focus:border-cyan-500/50 w-full"
-                          min="0.01"
-                          step="0.01"
-                          required
-                        />
-                        <span className="text-xs text-zinc-500 shrink-0">/ {item.uom.slice(0, 3)}</span>
-                      </div>
+                </Card>
+
+                {/* Tax Inputs and Totals Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                  {/* Tax & Terms (Left) */}
+                  <div className="space-y-4">
+                    <div className="flex flex-col gap-1.5 max-w-xs">
+                      <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">tax / GST %</label>
+                      <input
+                        type="number"
+                        value={gstPercent}
+                        onChange={(e) => setGstPercent(parseFloat(e.target.value) || 0)}
+                        className="bg-zinc-950 border border-zinc-800 text-xs rounded-lg p-2.5 text-zinc-300 outline-none focus:border-cyan-500/50 w-full font-bold"
+                        min="0"
+                        max="100"
+                        required
+                      />
                     </div>
-                  ))}
-                  
-                  {/* Dynamic calculation banner */}
-                  <div className="p-4 bg-zinc-950/40 flex justify-between items-center text-xs">
-                    <span className="font-semibold text-zinc-400">Total Bid Calculation:</span>
-                    <span className="text-sm font-bold text-cyan-400 flex items-center">
-                      <DollarSign className="w-3.5 h-3.5" />
-                      {getFormTotalBid().toLocaleString()}
-                    </span>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Note / terms</label>
+                      <textarea
+                        value={terms}
+                        onChange={(e) => setTerms(e.target.value)}
+                        rows="3"
+                        className="w-full bg-zinc-950 border border-zinc-800 text-xs rounded-lg p-3 text-zinc-300 outline-none focus:border-cyan-500/50 placeholder-zinc-700"
+                        required
+                      ></textarea>
+                    </div>
+                  </div>
+
+                  {/* Pricing Card (Right) */}
+                  <div className="p-5 bg-zinc-950 border border-zinc-900 rounded-xl space-y-3.5">
+                    <div className="flex justify-between items-center text-xs text-zinc-400">
+                      <span>Subtotal</span>
+                      <span className="font-semibold text-zinc-200">₹{getSubtotal().toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-zinc-400">
+                      <span>GST ({gstPercent}%)</span>
+                      <span className="font-semibold text-zinc-200">₹{getGstAmount().toLocaleString()}</span>
+                    </div>
+                    <div className="border-t border-zinc-900 pt-3 flex justify-between items-center">
+                      <span className="text-xs font-bold text-zinc-300">Grand total</span>
+                      <span className="text-base font-extrabold text-cyan-400">₹{getGrandTotal().toLocaleString()}</span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Input
-                    label="Delivery Lead Time"
-                    value={deliveryTime}
-                    onChange={(e) => setDeliveryTime(e.target.value)}
-                    placeholder="e.g. 5 days"
-                    required
-                  />
-                  <Input
-                    label="Quotation Validity Date"
-                    type="date"
-                    value={validityDate}
-                    onChange={(e) => setValidityDate(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Payment Clauses & Conditions</label>
-                  <textarea
-                    value={terms}
-                    onChange={(e) => setTerms(e.target.value)}
-                    rows="3"
-                    className="w-full bg-zinc-950 border border-zinc-800 text-xs rounded-lg p-3 text-zinc-300 outline-none focus:border-cyan-500/50"
-                    required
-                  ></textarea>
-                </div>
-
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button 
-                    variant="secondary" 
-                    onClick={() => setActiveTab('compare')}
-                  >
-                    Cancel
-                  </Button>
+                {/* Form Buttons */}
+                <div className="flex justify-start gap-3 pt-4 border-t border-zinc-900">
                   <Button 
                     type="submit" 
                     variant="primary"
                   >
                     Submit Quotation
                   </Button>
+                  <button 
+                    type="button" 
+                    onClick={handleSaveDraft}
+                    className="px-5 py-2.5 bg-black border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-950 text-xs font-bold text-zinc-400 hover:text-zinc-200 rounded-lg transition-all cursor-pointer"
+                  >
+                    Save Draft
+                  </button>
+                  <Button 
+                    variant="secondary" 
+                    onClick={() => setActiveTab('compare')}
+                  >
+                    Cancel
+                  </Button>
                 </div>
               </form>
-            </Card>
+            </div>
           )}
         </div>
       )}
