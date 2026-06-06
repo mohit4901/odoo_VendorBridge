@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { initialRfqs, initialQuotes } from '../../mock/rfqsData';
+import { useNotifications } from '../NotificationContext/NotificationContext';
+import { useAuth } from '../AuthContext';
 
 const RFQContext = createContext(null);
 
@@ -7,6 +9,8 @@ export const RFQProvider = ({ children }) => {
   const [rfqs, setRfqs] = useState([]);
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { addNotification, addAuditLog } = useNotifications();
+  const { user } = useAuth();
 
   useEffect(() => {
     // Initialize RFQs
@@ -51,6 +55,11 @@ export const RFQProvider = ({ children }) => {
     };
     const updated = [newRfq, ...rfqs];
     saveRfqs(updated);
+
+    // Dynamic Notifications & Logs
+    addNotification(`RFQ "${rfqData.title}" published successfully`, 'success');
+    addAuditLog(`RFQ Published`, `RFQ for "${rfqData.title}" dispatched to suppliers.`, 'rfq', user?.name || 'Console Administrator');
+
     return newRfq;
   };
 
@@ -62,13 +71,23 @@ export const RFQProvider = ({ children }) => {
     };
     const updated = [newQuote, ...quotes];
     saveQuotes(updated);
+
+    // Dynamic Notifications & Logs
+    addNotification(`New quotation submitted by ${quoteData.vendorName}`, 'info');
+    addAuditLog(`Quotation Submitted`, `Vendor ${quoteData.vendorName} submitted a bid of $${quoteData.totalCost?.toLocaleString() || quoteData.totalBid?.toLocaleString() || '0'} for RFQ.`, 'rfq', 'System Bot');
+
     return newQuote;
   };
 
   // Award contract
   const awardContract = (rfqId, quoteId) => {
+    let rfqTitle = 'RFQ';
+    let vendorName = 'Vendor';
+    let amount = 0;
+
     const updatedRfqs = rfqs.map(rfq => {
       if (rfq.id === rfqId) {
+        rfqTitle = rfq.title;
         return {
           ...rfq,
           status: 'Closed & Awarded',
@@ -78,6 +97,16 @@ export const RFQProvider = ({ children }) => {
       return rfq;
     });
     saveRfqs(updatedRfqs);
+
+    const quote = quotes.find(q => q.id === quoteId);
+    if (quote) {
+      vendorName = quote.vendorName;
+      amount = quote.totalCost || quote.totalBid || 0;
+    }
+
+    // Dynamic Notifications & Logs
+    addNotification(`Contract awarded to ${vendorName} for RFQ "${rfqTitle}"`, 'success');
+    addAuditLog(`Contract Awarded`, `RFQ "${rfqTitle}" contract awarded to ${vendorName} ($${amount.toLocaleString()}).`, 'rfq', user?.name || 'Console Administrator');
   };
 
   return (

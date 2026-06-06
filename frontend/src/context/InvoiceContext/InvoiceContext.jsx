@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNotifications } from '../NotificationContext/NotificationContext';
+import { useAuth } from '../AuthContext';
 
 const InvoiceContext = createContext(null);
 
@@ -23,6 +25,8 @@ const initialInvoices = [
 export const InvoiceProvider = ({ children }) => {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { addNotification, addAuditLog } = useNotifications();
+  const { user } = useAuth();
 
   useEffect(() => {
     const savedInvoices = localStorage.getItem('vb_invoices');
@@ -66,12 +70,24 @@ export const InvoiceProvider = ({ children }) => {
 
     const updated = [newInvoice, ...invoices];
     saveInvoices(updated);
+
+    // Dispatch notifications & logs
+    addNotification(`Invoice generated for ${po.vendorName}`, 'info');
+    addAuditLog(`Invoice Generated`, `Invoice ${newInvoice.invoiceRef} generated automatically from ${po.poRef} (${po.vendorName}).`, 'invoice', 'System Bot');
+
     return newInvoice;
   };
 
   const payInvoice = (id) => {
+    let invRef = '';
+    let vendor = '';
+    let total = 0;
+
     const updated = invoices.map(inv => {
       if (inv.id === id) {
+        invRef = inv.invoiceRef;
+        vendor = inv.vendorName;
+        total = inv.total;
         return {
           ...inv,
           status: 'Paid'
@@ -80,6 +96,10 @@ export const InvoiceProvider = ({ children }) => {
       return inv;
     });
     saveInvoices(updated);
+
+    // Dispatch notifications & logs
+    addNotification(`Invoice ${invRef} paid successfully`, 'success');
+    addAuditLog(`Invoice Paid`, `Invoice ${invRef} for ${vendor} ($${total.toLocaleString()}) marked as paid.`, 'invoice', user?.name || 'Console Administrator');
   };
 
   return (

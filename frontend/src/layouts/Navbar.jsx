@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext/NotificationContext';
 import { 
   Bell, 
   Search, 
@@ -10,11 +11,13 @@ import {
   User, 
   Building,
   Shield,
-  CheckCircle2
+  CheckCircle2,
+  X
 } from 'lucide-react';
 
 const Navbar = ({ toggleSidebar }) => {
   const { user, logout } = useAuth();
+  const { notifications, clearNotification, clearAllNotifications } = useNotifications();
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -58,11 +61,13 @@ const Navbar = ({ toggleSidebar }) => {
     navigate('/login');
   };
 
-  const mockAlerts = [
-    { id: 1, title: 'PO #8845 requires approval', type: 'warning', time: '10m ago' },
-    { id: 2, title: 'Zenith Energy submitted quotation', type: 'info', time: '1h ago' },
-    { id: 3, title: 'Compliance doc verified for Apex Metals', type: 'success', time: '4h ago' }
-  ];
+  const getNotifBadgeColor = (type) => {
+    switch (type) {
+      case 'warning': return 'bg-amber-500';
+      case 'success': return 'bg-emerald-500';
+      default: return 'bg-cyan-500';
+    }
+  };
 
   return (
     <header className="h-16 bg-zinc-950 border-b border-zinc-900/60 px-5 flex items-center justify-between sticky top-0 z-30">
@@ -103,30 +108,69 @@ const Navbar = ({ toggleSidebar }) => {
             className="p-2 rounded-lg bg-zinc-900/40 border border-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-800/80 transition-all cursor-pointer relative"
           >
             <Bell className="w-4.5 h-4.5" />
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.8)]"></span>
+            {notifications.length > 0 && (
+              <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.8)] animate-pulse"></span>
+            )}
           </button>
 
           {notificationsOpen && (
             <div className="absolute right-0 mt-2 w-80 bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden py-1 z-50">
               <div className="px-4 py-2.5 border-b border-zinc-900/60 flex justify-between items-center bg-zinc-950">
                 <span className="text-xs font-bold text-zinc-300 uppercase tracking-wide">Notifications</span>
-                <span className="text-[10px] bg-cyan-950 text-cyan-400 border border-cyan-900 px-1.5 py-0.5 rounded font-bold">3 New</span>
+                <div className="flex items-center gap-2">
+                  {notifications.length > 0 && (
+                    <>
+                      <span className="text-[10px] bg-cyan-950 text-cyan-400 border border-cyan-900 px-1.5 py-0.5 rounded font-bold">
+                        {notifications.length} New
+                      </span>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          clearAllNotifications();
+                        }}
+                        className="text-[10px] text-zinc-500 hover:text-cyan-400 transition-colors font-bold cursor-pointer"
+                      >
+                        Clear All
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
               <div className="divide-y divide-zinc-900/60 max-h-64 overflow-y-auto">
-                {mockAlerts.map((alert) => (
-                  <div key={alert.id} className="p-3.5 hover:bg-zinc-900/30 transition-colors flex flex-col gap-1 cursor-pointer">
-                    <div className="flex justify-between items-start">
-                      <span className="text-xs font-medium text-zinc-200">{alert.title}</span>
-                      <span className="text-[10px] text-zinc-500 shrink-0 ml-2">{alert.time}</span>
-                    </div>
+                {notifications.length === 0 ? (
+                  <div className="p-6 text-center text-xs text-zinc-500 font-medium">
+                    No new notifications
                   </div>
-                ))}
+                ) : (
+                  notifications.map((alert) => (
+                    <div 
+                      key={alert.id} 
+                      className="p-3 hover:bg-zinc-900/30 transition-colors flex items-start gap-2.5 group/item cursor-pointer"
+                      onClick={() => navigate('/activity')}
+                    >
+                      <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${getNotifBadgeColor(alert.type)}`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-zinc-200 leading-relaxed break-words">{alert.title}</p>
+                        <span className="text-[9px] text-zinc-500 block mt-0.5">{alert.time}</span>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          clearNotification(alert.id);
+                        }}
+                        className="opacity-0 group-hover/item:opacity-100 p-1 rounded hover:bg-zinc-900 text-zinc-500 hover:text-zinc-300 transition-all cursor-pointer shrink-0"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))
+                )}
               </div>
               <div className="p-2 border-t border-zinc-900/60 text-center bg-zinc-950">
                 <button 
                   onClick={() => {
                     setNotificationsOpen(false);
-                    navigate('/reports'); // Dynamic navigation matching Chunk 5 Reports/Logs
+                    navigate('/activity'); // Navigate to Activity logs
                   }}
                   className="text-[11px] font-semibold text-cyan-400 hover:text-cyan-300 hover:underline py-1 w-full text-center cursor-pointer"
                 >

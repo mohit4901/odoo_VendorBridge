@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNotifications } from '../NotificationContext/NotificationContext';
+import { useAuth } from '../AuthContext';
 
 const ApprovalContext = createContext(null);
 
@@ -58,6 +60,8 @@ export const ApprovalProvider = ({ children }) => {
   const [approvals, setApprovals] = useState([]);
   const [purchaseOrders, setPurchaseOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { addNotification, addAuditLog } = useNotifications();
+  const { user } = useAuth();
 
   // Trigger function when PO is generated to notify invoice context
   const [onPoIssued, setOnPoIssued] = useState(null);
@@ -108,6 +112,11 @@ export const ApprovalProvider = ({ children }) => {
             time: nowStr,
             comment: 'Details verified. Passed to Finance Node.'
           });
+
+          // Dispatch notifications
+          addNotification(`PO Request for ${app.vendorName} advanced to Finance Approval`, 'info');
+          addAuditLog(`Approval Advanced`, `PO request for ${app.vendorName} ($${app.amount.toLocaleString()}) approved by Manager, sent to Finance.`, 'po', user?.name || 'A. Sharma');
+
         } else if (app.status === 'Finance Approval') {
           nextStatus = 'Issued';
           newHistory.push({
@@ -116,6 +125,10 @@ export const ApprovalProvider = ({ children }) => {
             time: nowStr,
             comment: 'Funds allocated. Purchase Order issued.'
           });
+
+          // Dispatch notifications
+          addNotification(`Purchase Order issued for ${app.vendorName}`, 'success');
+          addAuditLog(`Purchase Order Issued`, `PO generated for ${app.vendorName} ($${app.amount.toLocaleString()}) after final Finance approval.`, 'po', user?.name || 'M. Mudgil');
 
           // Generate PO
           poGenerated = {
@@ -162,6 +175,11 @@ export const ApprovalProvider = ({ children }) => {
           time: 'Just now',
           comment: 'Quotation cost rejected. Re-negotiation required.'
         });
+
+        // Dispatch notifications
+        addNotification(`PO Request for ${app.vendorName} Rejected`, 'warning');
+        addAuditLog(`PO Request Rejected`, `PO request for ${app.vendorName} ($${app.amount.toLocaleString()}) was rejected.`, 'po', user?.name || 'Console Administrator');
+
         return {
           ...app,
           status: 'Rejected',
@@ -194,6 +212,10 @@ export const ApprovalProvider = ({ children }) => {
       }))
     };
     saveApprovals([newApproval, ...approvals]);
+
+    // Dispatch notifications
+    addNotification(`New approval workflow generated for "${title}"`, 'info');
+    addAuditLog(`Workflow Started`, `Approval process initialized for awarded contract to ${vendorName} ($${amount.toLocaleString()}).`, 'po', 'System Bot');
   };
 
   return (

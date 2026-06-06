@@ -16,8 +16,13 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import Modal from '../components/Modal';
 import { initialVendors } from '../mock/vendorsData';
+import { useNotifications } from '../context/NotificationContext/NotificationContext';
+import { useAuth } from '../context/AuthContext';
 
 const Vendors = () => {
+  const { addNotification, addAuditLog } = useNotifications();
+  const { user } = useAuth();
+
   // CRUD Local States initialized from localStorage
   const [vendors, setVendors] = useState(() => {
     const saved = localStorage.getItem('vb_vendors');
@@ -99,6 +104,11 @@ const Vendors = () => {
     };
     const updated = [newVendor, ...vendors];
     saveVendorsList(updated);
+    
+    // Dispatch notifications & logs
+    addNotification(`New Vendor "${formData.name}" onboarded`, 'success');
+    addAuditLog(`Vendor Registered`, `Vendor "${formData.name}" (${formData.category}) registered and onboarded.`, 'vendor', user?.name || 'Console Administrator');
+
     setIsAddOpen(false);
   };
 
@@ -107,6 +117,11 @@ const Vendors = () => {
     e.preventDefault();
     const updated = vendors.map(v => v.id === selectedVendor.id ? { ...v, ...formData } : v);
     saveVendorsList(updated);
+
+    // Dispatch notifications & logs
+    addNotification(`Vendor profile updated: ${formData.name}`, 'info');
+    addAuditLog(`Vendor Updated`, `Profile details for "${formData.name}" were modified.`, 'vendor', user?.name || 'Console Administrator');
+
     setIsEditOpen(false);
     setSelectedVendor(null);
   };
@@ -115,6 +130,11 @@ const Vendors = () => {
   const handleDeleteVendor = () => {
     const updated = vendors.filter(v => v.id !== selectedVendor.id);
     saveVendorsList(updated);
+
+    // Dispatch notifications & logs
+    addNotification(`Vendor "${selectedVendor.name}" removed`, 'warning');
+    addAuditLog(`Vendor Removed`, `Vendor "${selectedVendor.name}" was deleted from active directories.`, 'vendor', user?.name || 'Console Administrator');
+
     setIsDeleteOpen(false);
     setSelectedVendor(null);
   };
