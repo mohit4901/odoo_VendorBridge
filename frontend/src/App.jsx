@@ -11,47 +11,65 @@ import Rfqs from './pages/Rfqs';
 import Quotations from './pages/Quotations';
 
 import { RFQProvider } from './context/RFQContext/RFQContext';
+import { ApprovalProvider, useApprovals } from './context/ApprovalContext/ApprovalContext';
+import { InvoiceProvider, useInvoices } from './context/InvoiceContext/InvoiceContext';
+import { useEffect } from 'react';
+
+// Sync component to link PO emission to Invoice generation
+const WorkflowSync = ({ children }) => {
+  const { setOnPoIssued } = useApprovals();
+  const { createInvoiceFromPo } = useInvoices();
+
+  useEffect(() => {
+    setOnPoIssued(() => (po) => {
+      createInvoiceFromPo(po);
+    });
+  }, [createInvoiceFromPo, setOnPoIssued]);
+
+  return children;
+};
+
+import Approvals from './pages/Approvals';
+import PurchaseOrders from './pages/PurchaseOrders';
+import Invoices from './pages/Invoices';
 
 function App() {
   return (
     <AuthProvider>
       <RFQProvider>
-        <Routes>
-          {/* Auth routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+        <ApprovalProvider>
+          <InvoiceProvider>
+            <WorkflowSync>
+              <Routes>
+                {/* Auth routes */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
 
-          {/* Protected layout routes */}
-          <Route path="/" element={<MainLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="vendors" element={<Vendors />} />
-            <Route path="rfqs" element={<Rfqs />} />
-            <Route path="quotations" element={<Quotations />} />
-            <Route 
-              path="approvals" 
-              element={<ComingSoon moduleName="Workflow Approvals" chunkDescription="Chunk 4: Approval & Invoice" />} 
-            />
-            <Route 
-              path="purchase-orders" 
-              element={<ComingSoon moduleName="Purchase Orders" chunkDescription="Chunk 4: Approval & Invoice" />} 
-            />
-            <Route 
-              path="invoices" 
-              element={<ComingSoon moduleName="Invoice & Payments" chunkDescription="Chunk 4: Approval & Invoice" />} 
-            />
-            <Route 
-              path="reports" 
-              element={<ComingSoon moduleName="Reports & Analytics" chunkDescription="Chunk 5: Reports & Activity" />} 
-            />
-            <Route 
-              path="activity" 
-              element={<ComingSoon moduleName="System Audit Trail" chunkDescription="Chunk 5: Reports & Activity" />} 
-            />
-          </Route>
+                {/* Protected layout routes */}
+                <Route path="/" element={<MainLayout />}>
+                  <Route index element={<Dashboard />} />
+                  <Route path="vendors" element={<Vendors />} />
+                  <Route path="rfqs" element={<Rfqs />} />
+                  <Route path="quotations" element={<Quotations />} />
+                  <Route path="approvals" element={<Approvals />} />
+                  <Route path="purchase-orders" element={<PurchaseOrders />} />
+                  <Route path="invoices" element={<Invoices />} />
+                  <Route 
+                    path="reports" 
+                    element={<ComingSoon moduleName="Reports & Analytics" chunkDescription="Chunk 5: Reports & Activity" />} 
+                  />
+                  <Route 
+                    path="activity" 
+                    element={<ComingSoon moduleName="System Audit Trail" chunkDescription="Chunk 5: Reports & Activity" />} 
+                  />
+                </Route>
 
-          {/* Wildcard redirect */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+                {/* Wildcard redirect */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </WorkflowSync>
+          </InvoiceProvider>
+        </ApprovalProvider>
       </RFQProvider>
     </AuthProvider>
   );

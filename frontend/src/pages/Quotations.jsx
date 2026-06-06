@@ -13,6 +13,7 @@ import {
   Tag
 } from 'lucide-react';
 import { useRFQs } from '../context/RFQContext/RFQContext';
+import { useApprovals } from '../context/ApprovalContext/ApprovalContext';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -21,6 +22,7 @@ import { initialVendors } from '../mock/vendorsData';
 
 const Quotations = () => {
   const { rfqs, quotes, submitQuote, awardContract } = useRFQs();
+  const { addApprovalRequest } = useApprovals();
   const [suppliers, setSuppliers] = useState([]);
   
   // Active selected context
@@ -156,8 +158,27 @@ const Quotations = () => {
   };
 
   const handleAwardContract = (quoteId) => {
+    const quote = rfqQuotes.find(q => q.id === quoteId);
+    if (!quote) return;
+
     awardContract(selectedRfq.id, quoteId);
-    setAlertMsg({ type: 'success', text: 'Contract awarded successfully! RFQ marked as Closed & Awarded.' });
+
+    const mappedItems = selectedRfq.items.map(item => ({
+      name: item.name,
+      qty: item.qty,
+      price: quote.items[item.id] || 0
+    }));
+
+    addApprovalRequest(
+      selectedRfq.id,
+      selectedRfq.title,
+      quote.vendorId,
+      quote.vendorName,
+      quote.totalBid,
+      mappedItems
+    );
+
+    setAlertMsg({ type: 'success', text: 'Contract awarded successfully! Approval request sent to manager.' });
   };
 
   return (
