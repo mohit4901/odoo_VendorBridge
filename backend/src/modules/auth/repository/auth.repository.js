@@ -10,6 +10,10 @@ class AuthRepository extends BaseRepository {
   }
 
   /** Override: auth needs full Mongoose docs for instance methods. */
+  create(data) {
+    return this.model.create(data);
+  }
+
   findById(id) {
     return this.model.findById(id).exec();
   }
